@@ -117,7 +117,7 @@ h1, h2 { margin: 0; }
   grid-template-columns: repeat(3, minmax(0, 1fr));
   border: 3px solid #000;
 }
-.tile-a { background: repeating-conic-gradient(#c9a83a 0 25%, var(--purple) 0 50%) 0 0 / 60px 60px; }
+.tile-a { background: repeating-conic-gradient(#4da3ff 0 25%, var(--purple) 0 50%) 0 0 / 60px 60px; }
 .tile-b { background: repeating-conic-gradient(var(--rust) 0 25%, #b9a4e8 0 50%) 0 0 / 30px 30px; border-left: 3px solid #000; border-right: 3px solid #000; }
 .tile-c { background: repeating-conic-gradient(var(--mint) 0 25%, #3f8f3a 0 50%) 0 0 / 44px 44px; }
 
