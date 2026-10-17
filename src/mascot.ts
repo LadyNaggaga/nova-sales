@@ -59,6 +59,7 @@ export function mascotSVG(): string {
   <g fill="#12151b">${rects((c) => c === 'd' || c === 'e')}</g>
   <g fill="#ffffff">${rects((c) => c === 'w')}</g>
   <g class="mascot-eyes" fill="#ffffff">${rects((c) => c === 'e')}</g>
+  <g class="mascot-blink" fill="#ffffff">${rects((c) => c === 'e')}</g>
 </svg>`;
 }
 

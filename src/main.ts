@@ -3,6 +3,32 @@ import { buildSeats, EVENT, money, SERVICE_FEE_RATE, TIERS, type Seat } from './
 import { attachLookAt, mascotSVG } from './mascot';
 
 const PAYMENT_DELAY_MS = 1500;
+const LOW_TICKETS_THRESHOLD = 20;
+
+/** Tiny pixel heart icon shown on seats the shopper has picked. */
+const HEART_ICON = `<svg class="seat-icon" viewBox="0 0 7 6" shape-rendering="crispEdges" aria-hidden="true">
+  <rect x="1" y="0" width="2" height="1"/>
+  <rect x="4" y="0" width="2" height="1"/>
+  <rect x="0" y="1" width="7" height="2"/>
+  <rect x="1" y="3" width="5" height="1"/>
+  <rect x="2" y="4" width="3" height="1"/>
+  <rect x="3" y="5" width="1" height="1"/>
+</svg>`;
+
+// Avoids --lavender: the ticket background is lavender, so that color would vanish against it.
+const CONFETTI_COLORS = ['var(--pink)', 'var(--mustard)', 'var(--mint)', 'var(--purple)', 'var(--cyan)', 'var(--rust)'];
+
+function confettiHTML(): string {
+  let out = '';
+  for (let i = 0; i < 12; i++) {
+    const angle = Math.round((360 / 12) * i + (Math.random() * 20 - 10));
+    const dist = 40 + Math.round(Math.random() * 26);
+    const delay = (Math.random() * 0.15).toFixed(2);
+    const color = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+    out += `<i style="--a:${angle}deg;--r:${dist}px;--d:${delay}s;--c:${color}"></i>`;
+  }
+  return out;
+}
 
 type Phase = 'shopping' | 'processing' | 'confirmed';
 
@@ -46,7 +72,7 @@ function mount() {
     <section class="hero">
       <div class="hero-row">
         <div class="hero-copy">
-          <span class="pill">● ON SALE NOW</span>
+          <span class="pill"><span class="dot">●</span> ON SALE NOW</span>
           <h1 class="pixel hero-title">MIDNIGHT<br />MONA TOUR</h1>
           <p class="hero-meta">${esc(`${EVENT.date} · ${EVENT.doors} · ${EVENT.venue}`)}</p>
         </div>
@@ -72,7 +98,7 @@ function mount() {
           <h2 class="pixel">PICK YOUR SPOT</h2>
           <div class="legend">
             <span><i class="swatch swatch-open"></i>Open</span>
-            <span><i class="swatch swatch-mine"></i>Yours ✓</span>
+            <span><i class="swatch swatch-mine"></i>Yours ♥</span>
             <span><i class="swatch swatch-sold"></i>Sold ×</span>
           </div>
         </div>
@@ -138,7 +164,7 @@ function paintSeats() {
     el.classList.toggle('is-mine', mine);
     el.disabled = seat.sold || locked;
     el.setAttribute('aria-pressed', String(mine));
-    el.textContent = seat.sold ? '×' : mine ? '✓' : '';
+    el.innerHTML = seat.sold ? '×' : mine ? HEART_ICON : '';
     const label = `${seatName(seat)}, ${money(seat.tier.price)}${seat.sold ? ', sold' : mine ? ', selected' : ''}`;
     el.setAttribute('aria-label', label);
     el.title = label;
@@ -153,6 +179,7 @@ function renderCart() {
     cart.innerHTML = `
       <section class="ticket pop" aria-label="Order confirmed">
         <div class="ticket-body">
+          <div class="confetti" aria-hidden="true">${confettiHTML()}</div>
           <div class="pixel ticket-kicker">ADMIT ${o.seats.length} · ${esc(EVENT.tour.toUpperCase())}</div>
           <div class="pixel ticket-title">YOU'RE IN!</div>
           <div class="ticket-meta">Order ${esc(o.id)} · ${money(o.total)}</div>
@@ -215,7 +242,9 @@ function renderMobileBar() {
 }
 
 function render() {
-  $('#tickets-left').textContent = String(ticketsLeft());
+  const left = ticketsLeft();
+  $('#tickets-left').textContent = String(left);
+  $('.counter').classList.toggle('counter--low', left > 0 && left <= LOW_TICKETS_THRESHOLD);
   paintSeats();
   renderCart();
   renderMobileBar();
@@ -249,6 +278,14 @@ function confirmOrder(orderId: string, total: number, picked: Seat[]) {
 
 // ---------- events ----------
 
+function cheerMascot() {
+  const head = document.getElementById('mascot');
+  if (!head) return;
+  head.classList.remove('cheer');
+  void head.offsetWidth; // restart the cheer animation
+  head.classList.add('cheer');
+}
+
 document.addEventListener('click', (e) => {
   const target = e.target as HTMLElement;
 
@@ -256,7 +293,8 @@ document.addEventListener('click', (e) => {
   if (seatEl) {
     if (seatEl.disabled) return;
     const id = seatEl.dataset.seat!;
-    if (state.selected.has(id)) state.selected.delete(id);
+    const wasSelected = state.selected.has(id);
+    if (wasSelected) state.selected.delete(id);
     else state.selected.add(id);
     if (state.phase !== 'shopping') {
       state.phase = 'shopping';
@@ -265,6 +303,7 @@ document.addEventListener('click', (e) => {
     seatEl.classList.remove('pop');
     void seatEl.offsetWidth; // restart the pop animation
     seatEl.classList.add('pop');
+    if (!wasSelected) cheerMascot();
     render();
     return;
   }
