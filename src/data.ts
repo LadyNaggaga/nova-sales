@@ -35,7 +35,7 @@ export const EVENT = {
 export const SERVICE_FEE_RATE = 0.12;
 
 export const TIERS: Tier[] = [
-  { id: 'floor', name: 'Floor', price: 185, rows: 3, perRow: 12, color: '#4da3ff', curve: 0 },
+  { id: 'floor', name: 'Floor', price: 185, rows: 3, perRow: 12, color: '#ffd84d', curve: 0 },
   { id: 'lower', name: 'Lower Bowl', price: 120, rows: 3, perRow: 18, color: '#e0662a', curve: 14 },
   { id: 'upper', name: 'Upper Bowl', price: 65, rows: 3, perRow: 22, color: '#5bbf55', curve: 22 },
 ];

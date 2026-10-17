@@ -223,7 +223,7 @@ h1, h2 { margin: 0; }
 .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 14px; color: #c9c2d6; }
 .legend span { display: flex; align-items: center; gap: 6px; }
 .swatch { display: inline-block; width: 14px; height: 14px; border: 2px solid #000; }
-.swatch-open { background: #4da3ff; }
+.swatch-open { background: #ffd84d; }
 .swatch-mine { background: var(--lavender); border-color: #fff; }
 .swatch-sold { background: repeating-linear-gradient(135deg, #2a2f38 0 3px, #20242c 3px 6px); }
 
