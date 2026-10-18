@@ -1,4 +1,5 @@
 import './style.css';
+import { gsap } from 'gsap';
 import { buildSeats, EVENT, money, SERVICE_FEE_RATE, TIERS, type Seat } from './data';
 import { attachLookAt, mascotSVG } from './mascot';
 
@@ -30,13 +31,24 @@ function confettiHTML(): string {
   return out;
 }
 
+function dustHTML(): string {
+  return Array.from(
+    { length: 18 },
+    (_, i) =>
+      `<i style="--dust-x:${(i * 37) % 96}%;--dust-delay:${(i % 7) * -0.7}s;--dust-speed:${4 + (i % 5)}s"></i>`,
+  ).join('');
+}
+
 type Phase = 'shopping' | 'processing' | 'confirmed';
+type IntroPhase = 'closed' | 'open' | 'entered';
 
 const state = {
   seats: buildSeats(),
   selected: new Set<string>(),
   phase: 'shopping' as Phase,
   order: null as null | { id: string; total: number; seats: string[] },
+  introPhase: 'closed' as IntroPhase,
+  soundEnabled: false,
 };
 
 // ---------- helpers ----------
@@ -61,7 +73,71 @@ const ticketsLeft = () => state.seats.filter((s) => !s.sold && !state.selected.h
 
 function mount() {
   $('#app').innerHTML = `
-  <div class="page">
+  <section class="tour-intro" id="tour-intro" aria-labelledby="intro-title">
+    <span class="stage-lamp stage-lamp-left" aria-hidden="true"></span>
+    <span class="stage-lamp stage-lamp-right" aria-hidden="true"></span>
+    <div class="intro-spotlights" aria-hidden="true">
+      <span class="spotlight spotlight-left"></span>
+      <span class="spotlight spotlight-right"></span>
+    </div>
+    <div class="pixel-dust" aria-hidden="true">${dustHTML()}</div>
+
+    <div class="intro-reveal" aria-hidden="true">
+      <div class="tour-teaser">
+        <div class="pixel-band" aria-hidden="true">
+          <span class="performer performer-guitar"></span>
+          <span class="performer performer-lead"></span>
+          <span class="performer performer-drums"></span>
+        </div>
+        <div class="teaser-copy">
+          <span class="intro-kicker pixel">NOW BOOKING</span>
+          <h2 class="pixel reveal-title" tabindex="-1">THE NIGHT<br />STARTS HERE</h2>
+          <p class="reveal-artist">${esc(EVENT.artist)}</p>
+        </div>
+        <div class="tour-details">
+          <div class="tour-stops">
+            <span class="pixel details-label">TOUR DATES</span>
+            <div><strong>NOV 14</strong><span>Harborline Arena</span><em>TONIGHT</em></div>
+            <div><strong>NOV 16</strong><span>Neon Bay Pavilion</span><em>FEW LEFT</em></div>
+            <div><strong>NOV 21</strong><span>Starfall Theater</span><em>ON SALE</em></div>
+          </div>
+          <div class="reservation-ticket">
+            <span class="pixel ticket-label">SEAT RESERVATION</span>
+            <strong class="pixel">${esc(EVENT.tour.toUpperCase())}</strong>
+            <span>${esc(EVENT.date)} · ${esc(EVENT.doors)}</span>
+            <span>${esc(EVENT.venue)}</span>
+            <span class="ticket-barcode" aria-hidden="true"></span>
+          </div>
+        </div>
+        <button class="btn intro-proceed" data-action="enter-tour">PROCEED TO SEAT MAP ➜</button>
+      </div>
+    </div>
+    <button class="btn intro-back" data-action="close-curtain" aria-label="Close curtain">← CLOSE CURTAIN</button>
+
+    <div class="curtain curtain-left" aria-hidden="true"><span class="curtain-tassel"></span></div>
+    <div class="curtain curtain-right" aria-hidden="true"><span class="curtain-tassel"></span></div>
+    <div class="open-drape drape-left" aria-hidden="true"><span></span></div>
+    <div class="open-drape drape-right" aria-hidden="true"><span></span></div>
+    <div class="curtain-valance" aria-hidden="true"></div>
+
+    <div class="intro-marquee">
+      <span class="marquee-bulbs" aria-hidden="true"></span>
+      <span class="intro-kicker pixel">ONE NIGHT ONLY</span>
+      <h1 class="pixel intro-title" id="intro-title">MIDNIGHT<br />MONA TOUR</h1>
+      <p class="intro-artist">${esc(EVENT.artist)}</p>
+      <p class="intro-meta pixel">${esc(EVENT.date)} · ${esc(EVENT.venue)}</p>
+      <button class="btn intro-enter" data-action="open-curtain">ENTER THE THEATER</button>
+      <p class="intro-hint"><span class="key pixel">ENTER ↵</span> to open the curtain</p>
+    </div>
+
+    <button class="btn sound-toggle" data-action="toggle-sound" aria-pressed="false">
+      <span aria-hidden="true">♪</span> SOUND OFF
+    </button>
+    <div class="intro-floor" aria-hidden="true"></div>
+    <p class="intro-status" id="intro-status" aria-live="polite"></p>
+  </section>
+
+  <div class="page" aria-hidden="true">
     <header class="topbar">
       <div class="brand">
         <span class="brand-chip" aria-hidden="true"></span>
@@ -117,8 +193,12 @@ function mount() {
     <div class="mobile-bar" id="mobile-bar"></div>
   </div>`;
 
+  document.body.classList.add('intro-active');
+  $('.page').inert = true;
   buildVenue();
   attachLookAt($('#mascot'));
+  attachIntroSpotlight();
+  setupCurtainTimeline();
 }
 
 function buildVenue() {
@@ -286,6 +366,137 @@ function cheerMascot() {
   head.classList.add('cheer');
 }
 
+let audioContext: AudioContext | null = null;
+let curtainTimeline: gsap.core.Timeline | null = null;
+
+function playTone(frequency: number, duration: number, delay = 0, type: OscillatorType = 'square') {
+  if (!state.soundEnabled) return;
+  audioContext ??= new AudioContext();
+  if (audioContext.state === 'suspended') void audioContext.resume();
+
+  const oscillator = audioContext.createOscillator();
+  const gain = audioContext.createGain();
+  const start = audioContext.currentTime + delay;
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, start);
+  gain.gain.setValueAtTime(0.055, start);
+  gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+  oscillator.connect(gain);
+  gain.connect(audioContext.destination);
+  oscillator.start(start);
+  oscillator.stop(start + duration);
+}
+
+function playCurtainCue(opening: boolean) {
+  const notes = opening ? [164, 220, 330, 440] : [440, 330, 220, 164];
+  notes.forEach((note, index) => playTone(note, 0.22, index * 0.09, index % 2 ? 'square' : 'sawtooth'));
+}
+
+function attachIntroSpotlight() {
+  const intro = $('#tour-intro');
+  intro.addEventListener('pointermove', (event) => {
+    const normalized = event.clientX / Math.max(window.innerWidth, 1) - 0.5;
+    intro.style.setProperty('--spot-tilt', `${Math.round(normalized * 12)}deg`);
+  });
+}
+
+function setupCurtainTimeline() {
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const curtainDuration = reduceMotion ? 0 : 1;
+  const revealDuration = reduceMotion ? 0 : 0.28;
+
+  gsap.set('.intro-reveal', { autoAlpha: 0 });
+  gsap.set(['.open-drape', '.curtain-tassel'], { autoAlpha: 0 });
+
+  curtainTimeline = gsap
+    .timeline({ paused: true })
+    .to('.intro-marquee', { autoAlpha: 0, y: -54, scale: 0.92, duration: revealDuration, ease: 'steps(4)' }, 0)
+    .to('.curtain-left', { xPercent: -82, duration: curtainDuration, ease: 'steps(14)' }, 0)
+    .to('.curtain-right', { xPercent: 82, duration: curtainDuration, ease: 'steps(14)' }, 0)
+    .to('.spotlight', { opacity: 0.24, duration: revealDuration, ease: 'steps(3)' }, 0.5)
+    .to(['.open-drape', '.curtain-tassel'], { autoAlpha: 1, duration: 0.01 }, reduceMotion ? 0 : 0.72)
+    .to(
+      '.intro-reveal',
+      {
+        autoAlpha: 1,
+        duration: revealDuration,
+        ease: 'steps(4)',
+        onComplete: () => $('.reveal-title').focus({ preventScroll: true }),
+      },
+      reduceMotion ? 0 : 0.68,
+    );
+}
+
+function openCurtain() {
+  if (state.introPhase !== 'closed') return;
+  state.introPhase = 'open';
+
+  const intro = $('#tour-intro');
+  $('#intro-status').textContent = 'The curtain is opening.';
+  intro.classList.add('is-open');
+  intro.querySelector('.intro-reveal')?.setAttribute('aria-hidden', 'false');
+  intro.querySelector('.intro-marquee')?.setAttribute('aria-hidden', 'true');
+  playCurtainCue(true);
+  curtainTimeline?.play();
+}
+
+function closeCurtain() {
+  if (state.introPhase !== 'open') return;
+  state.introPhase = 'closed';
+
+  const intro = $('#tour-intro');
+  $('#intro-status').textContent = 'The curtain is closing.';
+  intro.querySelector('.intro-reveal')?.setAttribute('aria-hidden', 'true');
+  intro.querySelector('.intro-marquee')?.setAttribute('aria-hidden', 'false');
+  playCurtainCue(false);
+  curtainTimeline?.eventCallback('onReverseComplete', () => {
+    intro.classList.remove('is-open');
+    intro.querySelector<HTMLButtonElement>('.intro-enter')?.focus({ preventScroll: true });
+  });
+  curtainTimeline?.reverse();
+}
+
+function toggleSound() {
+  state.soundEnabled = !state.soundEnabled;
+  const button = document.querySelector<HTMLButtonElement>('.sound-toggle');
+  if (!button) return;
+  button.setAttribute('aria-pressed', String(state.soundEnabled));
+  button.innerHTML = `<span aria-hidden="true">${state.soundEnabled ? '♫' : '♪'}</span> SOUND ${state.soundEnabled ? 'ON' : 'OFF'}`;
+  if (state.soundEnabled) {
+    playTone(262, 0.12);
+    playTone(392, 0.18, 0.1);
+  }
+}
+
+function enterTour() {
+  if (state.introPhase !== 'open') return;
+  state.introPhase = 'entered';
+
+  const intro = $('#tour-intro');
+  const page = $('.page');
+  $('#intro-status').textContent = 'Opening the seat map.';
+  document.body.classList.remove('intro-active');
+  playTone(523, 0.18);
+  playTone(659, 0.18, 0.1);
+  playTone(784, 0.28, 0.2);
+
+  gsap.to(intro, {
+    autoAlpha: 0,
+    duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 0.45,
+    ease: 'steps(5)',
+    onComplete: () => {
+      intro.hidden = true;
+      page.inert = false;
+      page.removeAttribute('aria-hidden');
+      const heading = page.querySelector<HTMLElement>('.hero-title');
+      if (heading) {
+        heading.tabIndex = -1;
+        heading.focus({ preventScroll: true });
+      }
+    },
+  });
+}
+
 document.addEventListener('click', (e) => {
   const target = e.target as HTMLElement;
 
@@ -314,6 +525,18 @@ document.addEventListener('click', (e) => {
   if (state.phase === 'processing') return;
 
   switch (actionEl.dataset.action) {
+    case 'open-curtain':
+      openCurtain();
+      break;
+    case 'close-curtain':
+      closeCurtain();
+      break;
+    case 'toggle-sound':
+      toggleSound();
+      break;
+    case 'enter-tour':
+      enterTour();
+      break;
     case 'pay':
       void pay();
       break;
@@ -326,6 +549,13 @@ document.addEventListener('click', (e) => {
       state.order = null;
       render();
       break;
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && state.introPhase === 'closed') {
+    e.preventDefault();
+    openCurtain();
   }
 });
 
