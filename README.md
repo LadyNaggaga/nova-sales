@@ -22,6 +22,9 @@ A pixel-art concert ticket-booking app with simulated payments. It uses Vite and
 
 ## Demo flow
 
+For the cross-client coding-agent rehearsal, see
+[Continuity E2E demo guide](docs/continuity-e2e-demo.md).
+
 ### 1. Enter the theater
 
 The experience begins with the curtain closed. Select **Enter the Theater** or press **Enter** to start the show.

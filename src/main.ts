@@ -1,9 +1,11 @@
 import './style.css';
 import { gsap } from 'gsap';
 import { buildSeats, EVENT, money, SERVICE_FEE_RATE, TIERS, type Seat } from './data';
+import { DemoPaymentGateway, getPaymentScenario, isDemoMode, type PaymentScenario } from './demo-payment-gateway';
 import { attachLookAt, mascotSVG } from './mascot';
+import { PaymentError, processPaymentWithRetry } from './payment';
+import { calculateTotals } from './totals';
 
-const PAYMENT_DELAY_MS = 1500;
 const LOW_TICKETS_THRESHOLD = 20;
 
 /** Tiny pixel heart icon shown on seats the shopper has picked. */
@@ -49,6 +51,12 @@ const state = {
   order: null as null | { id: string; total: number; seats: string[] },
   introPhase: 'closed' as IntroPhase,
   soundEnabled: false,
+  paymentScenario: getPaymentScenario(window.location.search),
+  paymentAttempt: 0,
+  paymentMaxAttempts: 3,
+  paymentMessage: '',
+  paymentError: '',
+  ordersCreated: 0,
 };
 
 // ---------- helpers ----------
@@ -62,9 +70,7 @@ const seatName = (s: Seat) => `${s.tier.name} · ${s.row}${s.number}`;
 
 function totals() {
   const picked = state.seats.filter((s) => state.selected.has(s.id));
-  const subtotal = picked.reduce((sum, s) => sum + s.tier.price, 0);
-  const fee = Math.round(subtotal * SERVICE_FEE_RATE * 100) / 100;
-  return { picked, subtotal, fee, total: subtotal + fee };
+  return { picked, ...calculateTotals(picked.map((seat) => seat.tier.price), SERVICE_FEE_RATE) };
 }
 
 const ticketsLeft = () => state.seats.filter((s) => !s.sold && !state.selected.has(s.id)).length;
@@ -143,6 +149,22 @@ function mount() {
         <span class="brand-chip" aria-hidden="true"></span>
         <span class="pixel">${esc(EVENT.artist.toUpperCase())}</span>
       </div>
+      ${
+        isDemoMode(window.location.search)
+          ? `<aside class="demo-panel" aria-label="Demo payment controls">
+              <label for="demo-payment-scenario">DEMO PAYMENT</label>
+              <select id="demo-payment-scenario">
+                ${(['success', 'transient', 'declined', 'offline'] as PaymentScenario[])
+                  .map(
+                    (scenario) =>
+                      `<option value="${scenario}" ${scenario === state.paymentScenario ? 'selected' : ''}>${scenario.toUpperCase()}</option>`,
+                  )
+                  .join('')}
+              </select>
+              <span id="demo-payment-state"></span>
+            </aside>`
+          : ''
+      }
     </header>
 
     <section class="hero">
@@ -299,6 +321,13 @@ function renderCart() {
         <div><span>Service fee (${Math.round(SERVICE_FEE_RATE * 100)}%)</span><span>${money(fee)}</span></div>
         <div class="pixel cart-total"><span>TOTAL</span><span>${money(total)}</span></div>
         <p class="payment-note">Simulated payment — no real charge.</p>
+        <p
+          class="payment-status ${state.paymentError ? 'payment-status--error' : ''}"
+          id="payment-status"
+          role="${state.paymentError ? 'alert' : 'status'}"
+          aria-live="${state.paymentError ? 'assertive' : 'polite'}"
+          tabindex="-1"
+        >${esc(state.paymentError || state.paymentMessage)}</p>
         <button class="btn btn-pay" data-action="pay" ${empty || busy ? 'disabled' : ''}>
           ${busy ? 'PROCESSING PAYMENT…' : empty ? 'PICK A SEAT' : `PAY ${money(total)}`}
         </button>
@@ -328,24 +357,49 @@ function render() {
   paintSeats();
   renderCart();
   renderMobileBar();
+  renderDemoPanel();
 }
 
 // ---------- checkout ----------
 
-function newOrderId() {
-  return `NL-${crypto.randomUUID().toUpperCase()}`;
+function renderDemoPanel() {
+  const output = document.getElementById('demo-payment-state');
+  if (!output) return;
+  const attempt = state.paymentAttempt ? `${state.paymentAttempt}/${state.paymentMaxAttempts}` : 'not started';
+  output.textContent = `Attempt: ${attempt} · Orders: ${state.ordersCreated}`;
 }
 
 async function pay() {
   if (state.phase !== 'shopping' || state.selected.size === 0) return;
 
   const { picked, total } = totals();
-  const orderId = newOrderId();
+  const gateway = new DemoPaymentGateway(state.paymentScenario);
   state.phase = 'processing';
+  state.paymentAttempt = 0;
+  state.paymentMessage = 'Starting simulated payment.';
+  state.paymentError = '';
   render();
 
-  await new Promise<void>((resolve) => setTimeout(resolve, PAYMENT_DELAY_MS));
-  confirmOrder(orderId, total, picked);
+  try {
+    const result = await processPaymentWithRetry(gateway, total, {
+      onAttempt: ({ attempt, maxAttempts }) => {
+        state.paymentAttempt = attempt;
+        state.paymentMaxAttempts = maxAttempts;
+        state.paymentMessage =
+          attempt === 1 ? 'Processing simulated payment.' : `Temporary failure. Retrying payment (${attempt}/${maxAttempts}).`;
+        render();
+      },
+    });
+    state.ordersCreated += 1;
+    confirmOrder(result.orderId, total, picked);
+  } catch (error) {
+    state.phase = 'shopping';
+    state.paymentMessage = '';
+    state.paymentError =
+      error instanceof PaymentError ? error.message : 'The simulated payment could not be completed. Please try again.';
+    render();
+    requestAnimationFrame(() => document.getElementById('payment-status')?.focus({ preventScroll: true }));
+  }
 }
 
 function confirmOrder(orderId: string, total: number, picked: Seat[]) {
@@ -353,6 +407,8 @@ function confirmOrder(orderId: string, total: number, picked: Seat[]) {
   state.selected.clear();
   state.order = { id: orderId, total, seats: picked.map(seatName) };
   state.phase = 'confirmed';
+  state.paymentMessage = 'Payment confirmed.';
+  state.paymentError = '';
   render();
 }
 
@@ -557,6 +613,16 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
     openCurtain();
   }
+});
+
+document.addEventListener('change', (e) => {
+  const target = e.target;
+  if (!(target instanceof HTMLSelectElement) || target.id !== 'demo-payment-scenario') return;
+
+  const url = new URL(window.location.href);
+  url.searchParams.set('demo', 'true');
+  url.searchParams.set('payment', target.value);
+  window.location.assign(url);
 });
 
 mount();

@@ -6,11 +6,16 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:payment": "vitest run src/payment.test.ts",
+    "test:totals": "vitest run src/totals.test.ts",
+    "demo:seed": "node scripts/seed-payment-demo.mjs"
   },
   "devDependencies": {
     "typescript": "^5.6.3",
-    "vite": "^5.4.10"
+    "vite": "^5.4.10",
+    "vitest": "^2.1.9"
   },
   "dependencies": {
     "gsap": "^3.15.0"
