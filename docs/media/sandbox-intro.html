@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Copilot Sandboxes — 15s intro</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --line:#30363d; --fg:#f0f6fc; --muted:#8b949e; --green:#3fb950; --purple:#a371f7; }
+  html,body { margin:0; height:100%; background:#000; overflow:hidden; }
+  #wrap { position:fixed; inset:0; display:grid; place-items:center; }
+  #stage { width:1920px; height:1080px; transform-origin:center; flex:none; background:var(--bg); position:relative;
+    font-family:"Mona Sans","Hubot Sans",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif; color:var(--fg); }
+  svg { position:absolute; inset:0; width:1920px; height:1080px; }
+  text { font-family:inherit; }
+  #hint { position:fixed; left:12px; bottom:10px; font:12px system-ui; color:#6e7681; z-index:5; }
+  body.rec #hint { display:none; }
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+<svg viewBox="0 0 1920 1080" id="svg">
+  <defs>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M60 0H0V60" fill="none" stroke="#ffffff" stroke-opacity=".035"/>
+    </pattern>
+    <radialGradient id="glowG" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#3fb950" stop-opacity=".28"/><stop offset="1" stop-color="#3fb950" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowP" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#a371f7" stop-opacity=".35"/><stop offset="1" stop-color="#a371f7" stop-opacity="0"/></radialGradient>
+    <linearGradient id="cop" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c297ff"/><stop offset="1" stop-color="#7d4de0"/></linearGradient>
+    <g id="node">
+      <circle r="120" fill="url(#glowP)"/>
+      <circle r="58" fill="url(#cop)"/>
+      <text y="16" text-anchor="middle" font-size="46" font-weight="700" fill="#fff" font-family="ui-monospace,Menlo,Consolas,monospace">&gt;_</text>
+    </g>
+  </defs>
+
+  <rect width="1920" height="1080" fill="#0d1117"/>
+  <rect width="1920" height="1080" fill="url(#grid)"/>
+  <circle id="bgglow" cx="960" cy="470" r="520" fill="url(#glowG)"/>
+
+  <g id="top" transform="translate(96,84)">
+    <text font-size="30" font-weight="600" fill="#f0f6fc" letter-spacing="1">GitHub Copilot</text>
+    <text y="40" font-size="22" fill="#8b949e" letter-spacing="3">SANDBOXES</text>
+  </g>
+  <g id="timer" transform="translate(1824,100)">
+    <rect x="-400" y="-12" width="400" height="6" rx="3" fill="#21262d"/>
+    <rect id="bar" x="-400" y="-12" width="0" height="6" rx="3" fill="#3fb950"/>
+  </g>
+
+  <!-- Scene A: title -->
+  <g id="sA">
+    <text id="a1" x="960" y="450" text-anchor="middle" font-size="150" font-weight="800" fill="#f0f6fc">Sandboxes</text>
+    <text id="a2" x="960" y="590" text-anchor="middle" font-size="84" font-weight="600" fill="#3fb950">let Copilot work safely.</text>
+    <g id="aNode" transform="translate(960,730)"><use href="#node" transform="scale(.9)"/></g>
+  </g>
+
+  <!-- Scene B: local -->
+  <g id="sB">
+    <rect x="620" y="230" width="680" height="420" rx="28" fill="#161b22" stroke="#30363d" stroke-width="3"/>
+    <rect x="560" y="650" width="800" height="30" rx="15" fill="#21262d" stroke="#30363d" stroke-width="3"/>
+    <text x="960" y="272" text-anchor="middle" font-size="22" fill="#8b949e" letter-spacing="3">YOUR MACHINE</text>
+    <rect id="fence" x="780" y="300" width="360" height="300" rx="24" fill="#3fb950" fill-opacity=".05"
+          stroke="#3fb950" stroke-width="5" stroke-dasharray="1" pathLength="1" stroke-dashoffset="1"/>
+    <g transform="translate(960,452)"><use href="#node"/></g>
+    <g id="bT1" transform="translate(300,360)"><rect x="-90" y="-30" width="180" height="60" rx="30" fill="#21262d" stroke="#484f58"/><text y="9" text-anchor="middle" font-size="26" fill="#c9d1d9" font-family="ui-monospace,Menlo,monospace">~/.ssh</text></g>
+    <g id="bT2" transform="translate(300,452)"><rect x="-90" y="-30" width="180" height="60" rx="30" fill="#21262d" stroke="#484f58"/><text y="9" text-anchor="middle" font-size="26" fill="#c9d1d9" font-family="ui-monospace,Menlo,monospace">network</text></g>
+    <g id="bT3" transform="translate(300,544)"><rect x="-90" y="-30" width="180" height="60" rx="30" fill="#21262d" stroke="#484f58"/><text y="9" text-anchor="middle" font-size="26" fill="#c9d1d9" font-family="ui-monospace,Menlo,monospace">tokens</text></g>
+    <g id="bLock" transform="translate(1140,312)">
+      <rect x="-26" y="-18" width="52" height="40" rx="8" fill="#3fb950"/>
+      <path d="M-14 -18 v-12 a14 14 0 0 1 28 0 v12" fill="none" stroke="#3fb950" stroke-width="7"/>
+    </g>
+    <text id="bLabel" x="960" y="800" text-anchor="middle" font-size="64" font-weight="700" fill="#f0f6fc">Local sandbox</text>
+    <text id="bSub" x="960" y="858" text-anchor="middle" font-size="32" fill="#8b949e">restricted files · network · credentials</text>
+  </g>
+
+  <!-- Scene C: cloud -->
+  <g id="sC">
+    <g id="cCloud" transform="translate(960,290)">
+      <path d="M-110 20 A55 55 0 0 1 -105 -88 A85 85 0 0 1 60 -80 A60 60 0 0 1 100 20 Z"
+            fill="#161b22" stroke="#30363d" stroke-width="3"/>
+    </g>
+    <rect id="cBox" x="660" y="330" width="600" height="300" rx="28" fill="#3fb950" fill-opacity=".06"
+          stroke="#3fb950" stroke-width="5" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/>
+    <text x="960" y="372" text-anchor="middle" font-size="22" fill="#3fb950" letter-spacing="3">ISOLATED · EPHEMERAL LINUX</text>
+    <g transform="translate(960,495)"><use href="#node"/></g>
+
+    <g id="cDev1" transform="translate(250,480)">
+      <rect x="-90" y="-60" width="180" height="120" rx="14" fill="#161b22" stroke="#30363d" stroke-width="3"/>
+      <rect x="-120" y="64" width="240" height="14" rx="7" fill="#21262d" stroke="#30363d" stroke-width="2"/>
+      <text y="86" text-anchor="middle" font-size="22" fill="#8b949e" dy="40">laptop</text>
+    </g>
+    <g id="cDev2" transform="translate(1670,480)">
+      <rect x="-50" y="-90" width="100" height="180" rx="18" fill="#161b22" stroke="#30363d" stroke-width="3"/>
+      <text y="86" text-anchor="middle" font-size="22" fill="#8b949e" dy="40">phone</text>
+    </g>
+    <path id="cL1" d="M345 480 H660" stroke="#3fb950" stroke-width="3" stroke-dasharray="10 12" fill="none"/>
+    <path id="cL2" d="M1260 480 H1615" stroke="#3fb950" stroke-width="3" stroke-dasharray="10 12" fill="none"/>
+    <circle id="cP1" r="9" fill="#3fb950"/>
+    <circle id="cP2" r="9" fill="#a371f7"/>
+
+    <text id="cLabel" x="960" y="800" text-anchor="middle" font-size="64" font-weight="700" fill="#f0f6fc">Cloud sandbox</text>
+    <text id="cSub" x="960" y="858" text-anchor="middle" font-size="32" fill="#8b949e">fully isolated · portable · any device</text>
+  </g>
+
+  <!-- Scene D: anywhere -->
+  <g id="sD">
+    <g id="dChips"></g>
+    <path id="dLine" d="" stroke="#3fb950" stroke-width="4" fill="none"/>
+    <rect x="560" y="580" width="800" height="240" rx="28" fill="#3fb950" fill-opacity=".06" stroke="#3fb950" stroke-width="4"/>
+    <text x="960" y="622" text-anchor="middle" font-size="22" fill="#3fb950" letter-spacing="3">ONE SESSION · CLOUD SANDBOX</text>
+    <g transform="translate(960,712)"><use href="#node" transform="scale(.85)"/></g>
+    <g id="dShield" transform="translate(1180,712)">
+      <path d="M0 -62 L52 -42 V10 C52 42 26 62 0 74 C-26 62 -52 42 -52 10 V-42 Z" fill="#161b22" stroke="#3fb950" stroke-width="5"/>
+      <path d="M-22 6 l16 16 l30 -34" fill="none" stroke="#3fb950" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g id="dClosed" transform="translate(740,712)">
+      <rect x="-50" y="-6" width="100" height="14" rx="7" fill="#21262d" stroke="#484f58" stroke-width="2"/>
+      <text y="38" text-anchor="middle" font-size="20" fill="#8b949e">laptop closed</text>
+    </g>
+    <text id="dTitle" x="960" y="905" text-anchor="middle" font-size="64" font-weight="700" fill="#f0f6fc">Start anywhere. <tspan fill="#3fb950">Finish anywhere.</tspan></text>
+  </g>
+
+  <!-- caption -->
+  <g id="cap">
+    <rect x="360" y="960" width="1200" height="88" rx="44" fill="#161b22" fill-opacity=".92" stroke="#30363d" stroke-width="2"/>
+    <text id="capT" x="960" y="1016" text-anchor="middle" font-size="36" fill="#f0f6fc"></text>
+  </g>
+</svg>
+</div></div>
+<div id="hint">Space: pause/play · R: restart · ←/→: seek 1s · ?t=SECONDS to freeze a frame · ?rec hides this hint</div>
+
+<script>
+const DURATION = 15;
+const $ = id => document.getElementById(id);
+const clamp = (x,a=0,b=1) => Math.min(b,Math.max(a,x));
+const easeOut = x => 1-Math.pow(1-x,3);
+const prog = (t,a,b) => clamp((t-a)/(b-a));
+const vis = (t,a,b,f=.45) => clamp((t-a)/f) * clamp((b-t)/f);
+
+const CAPS = [
+  [0.0, "Sandboxes let Copilot work safely."],
+  [3.2, "Locally, it's fenced in."],
+  [6.0, "In the cloud, it's fully isolated and portable."],
+  [9.3, "So I can start a task anywhere and finish it anywhere,"],
+  [12.4, "without the work or my laptop at risk."]
+];
+
+const CHIPS = [
+  {name:"GitHub Mobile", x:300, a:9.4},
+  {name:"VS Code", x:760, a:10.3},
+  {name:"Copilot app", x:1160, a:11.2},
+  {name:"GitHub.com", x:1620, a:12.1}
+];
+$("dChips").innerHTML = CHIPS.map((c,i)=>`
+  <g id="chip${i}" transform="translate(${c.x},400)">
+    <rect id="chipR${i}" x="-170" y="-48" width="340" height="96" rx="48" fill="#161b22" stroke="#30363d" stroke-width="3"/>
+    <text y="12" text-anchor="middle" font-size="34" font-weight="600" fill="#f0f6fc">${c.name}</text>
+  </g>`).join("");
+
+function setOp(id,v){ const e=$(id); if(e) e.setAttribute("opacity",v.toFixed(3)); }
+function tr(id,x,y,s){ const e=$(id); if(e) e.setAttribute("transform",`translate(${x},${y})${s!==undefined?` scale(${s})`:""}`); }
+
+function render(t){
+  t = clamp(t,0,DURATION);
+  $("bar").setAttribute("width", (400*t/DURATION).toFixed(1));
+
+  let cap = CAPS[0];
+  for(const c of CAPS) if(t>=c[0]) cap=c;
+  $("capT").textContent = cap[1];
+  setOp("cap", clamp((t-cap[0])/.3)*0.5+0.5);
+
+  // A
+  setOp("sA", t<0.5 ? 1 : vis(t,0,3.4,.5));
+  const a1 = easeOut(prog(t,0.05,0.8)), a2 = easeOut(prog(t,0.7,1.5));
+  tr("a1",960,450+(1-a1)*30); $("a1").removeAttribute("transform"); $("a1").setAttribute("y",(450+(1-a1)*30).toFixed(1)); setOp("a1",a1);
+  $("a2").setAttribute("y",(590+(1-a2)*30).toFixed(1)); setOp("a2",a2);
+  tr("aNode",960,730 + Math.sin(t*2)*6);
+
+  // B
+  setOp("sB", vis(t,3.0,6.4,.5));
+  const fence = easeOut(prog(t,3.4,4.6));
+  $("fence").setAttribute("stroke-dashoffset",(1-fence).toFixed(3));
+  $("fence").setAttribute("stroke-dasharray", fence>=1 ? "0.02 0.012" : "1");
+  [["bT1",360,3.9],["bT2",452,4.2],["bT3",544,4.5]].forEach(([id,y,t0])=>{
+    const p = easeOut(prog(t,t0,t0+0.9));
+    const bounce = p>=1 ? easeOut(prog(t,t0+0.9,t0+1.4))*-26 : 0;
+    tr(id, 300 + p*380 + bounce, y);
+    setOp(id, (0.35+0.65*clamp(p*2)) * (1-prog(t,5.8,6.3)*0.7));
+  });
+  const lk = easeOut(prog(t,4.4,5.0)); tr("bLock",1140,312-(1-lk)*20,lk); setOp("bLock",lk);
+  setOp("bLabel",easeOut(prog(t,3.5,4.2))); setOp("bSub",easeOut(prog(t,3.9,4.6)));
+
+  // C
+  setOp("sC", vis(t,6.0,9.6,.5));
+  setOp("cCloud", easeOut(prog(t,6.1,6.8)));
+  $("cBox").setAttribute("stroke-dashoffset",(1-easeOut(prog(t,6.3,7.4))).toFixed(3));
+  setOp("cDev1", easeOut(prog(t,7.0,7.6))); setOp("cDev2", easeOut(prog(t,7.2,7.8)));
+  setOp("cL1", easeOut(prog(t,7.4,8.0))); setOp("cL2", easeOut(prog(t,7.6,8.2)));
+  const cp = ((t-7.8)/1.2)%1;
+  $("cP1").setAttribute("cx", (345+cp*315).toFixed(1)); $("cP1").setAttribute("cy",480);
+  $("cP2").setAttribute("cx", (1615-cp*355).toFixed(1)); $("cP2").setAttribute("cy",480);
+  setOp("cP1", t>7.8?1:0); setOp("cP2", t>7.8?1:0);
+  setOp("cLabel", easeOut(prog(t,6.2,6.9))); setOp("cSub", easeOut(prog(t,6.6,7.3)));
+
+  // D
+  setOp("sD", clamp((t-9.2)/.5));
+  CHIPS.forEach((c,i)=>{
+    const ap = easeOut(prog(t,9.2+i*0.1,9.9+i*0.1));
+    tr("chip"+i, c.x, 400+(1-ap)*30); setOp("chip"+i, ap);
+    const active = t>=c.a && t<c.a+0.95, done = t>=c.a+0.95;
+    const r = $("chipR"+i);
+    r.setAttribute("stroke", active ? "#3fb950" : (done ? "#2a7a3b" : "#30363d"));
+    r.setAttribute("fill", active ? "#12261a" : "#161b22");
+  });
+  const act = CHIPS.findIndex(c=>t>=c.a && t<c.a+0.95);
+  const line = $("dLine");
+  if(act>=0 && t<12.4){
+    line.setAttribute("d",`M${CHIPS[act].x} 448 V520 H960 V590`); line.setAttribute("opacity",1);
+  } else line.setAttribute("opacity",0);
+  setOp("dClosed", easeOut(prog(t,12.4,13.0)));
+  const sh = easeOut(prog(t,12.9,13.6));
+  setOp("dShield", sh); tr("dShield",1180,712-(1-sh)*16);
+  setOp("dTitle", easeOut(prog(t,13.2,14.0)));
+}
+
+let t0 = null, paused = false, cur = 0;
+const params = new URLSearchParams(location.search);
+if(params.has("rec")) document.body.classList.add("rec");
+function fit(){ $("stage").style.transform = `scale(${Math.min(innerWidth/1920, innerHeight/1080)})`; }
+addEventListener("resize",fit); fit();
+function loop(ts){
+  if(t0===null) t0 = ts - cur*1000;
+  if(!paused){ cur = (ts-t0)/1000; if(cur>DURATION+1.2){ t0=ts; cur=0; } }
+  render(Math.min(cur,DURATION));
+  requestAnimationFrame(loop);
+}
+window.seek = s => { cur=s; paused=true; render(s); };
+if(params.has("t")) window.seek(parseFloat(params.get("t")));
+else requestAnimationFrame(loop);
+addEventListener("keydown",e=>{
+  if(e.code==="Space"){ paused=!paused; t0=null; }
+  if(e.key==="r"||e.key==="R"){ cur=0; t0=null; paused=false; }
+  if(e.key==="ArrowRight"){ cur=Math.min(DURATION,cur+1); t0=null; }
+  if(e.key==="ArrowLeft"){ cur=Math.max(0,cur-1); t0=null; }
+});
+</script>
+</body>
+</html>
