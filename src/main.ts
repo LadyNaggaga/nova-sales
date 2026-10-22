@@ -60,6 +60,23 @@ const esc = (s: string) =>
 
 const seatName = (s: Seat) => `${s.tier.name} · ${s.row}${s.number}`;
 
+function syncThemeButtons() {
+  document.querySelectorAll<HTMLButtonElement>('[data-theme-choice]').forEach((button) => {
+    button.setAttribute('aria-pressed', String(button.dataset.themeChoice === document.documentElement.dataset.theme));
+  });
+}
+
+function setTheme(theme: 'light' | 'dark') {
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.dataset.themeSource = 'manual';
+  syncThemeButtons();
+  try {
+    localStorage.setItem('nova-theme', theme);
+  } catch (error) {
+    console.warn('Theme changed, but the preference could not be saved.', error);
+  }
+}
+
 function totals() {
   const picked = state.seats.filter((s) => state.selected.has(s.id));
   const subtotal = picked.reduce((sum, s) => sum + s.tier.price, 0);
@@ -143,6 +160,16 @@ function mount() {
         <span class="brand-chip" aria-hidden="true"></span>
         <span class="pixel">${esc(EVENT.artist.toUpperCase())}</span>
       </div>
+      <div class="theme-switch" role="group" aria-label="Color theme">
+        <button class="btn theme-option" data-action="theme" data-theme-choice="light" aria-label="Light theme" aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
+          LIGHT
+        </button>
+        <button class="btn theme-option" data-action="theme" data-theme-choice="dark" aria-label="Dark theme" aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 13.5A9 9 0 0 1 10.5 3.5a9 9 0 1 0 10 10Z"/></svg>
+          DARK
+        </button>
+      </div>
     </header>
 
     <section class="hero">
@@ -195,6 +222,12 @@ function mount() {
 
   document.body.classList.add('intro-active');
   $('.page').inert = true;
+  syncThemeButtons();
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
+    if (document.documentElement.dataset.themeSource !== 'system') return;
+    document.documentElement.dataset.theme = event.matches ? 'dark' : 'light';
+    syncThemeButtons();
+  });
   buildVenue();
   attachLookAt($('#mascot'));
   attachIntroSpotlight();
@@ -208,11 +241,12 @@ function buildVenue() {
     const rows = [...new Set(seats.map((s) => s.row))];
     const block = document.createElement('div');
     block.className = 'tier';
+    block.style.setProperty('--tier-color', tier.color);
     block.innerHTML = `
       <div class="tier-label pixel">
         <i class="swatch" style="background:${tier.color}"></i>
         <span>${esc(tier.name.toUpperCase())}</span>
-        <span style="color:${tier.color}">${money(tier.price).replace('.00', '')}</span>
+        <span class="tier-price">${money(tier.price).replace('.00', '')}</span>
       </div>
       ${rows
         .map((row) => {
@@ -521,6 +555,11 @@ document.addEventListener('click', (e) => {
 
   const actionEl = target.closest<HTMLElement>('[data-action]');
   if (!actionEl || (actionEl as HTMLButtonElement).disabled) return;
+  if (actionEl.dataset.action === 'theme') {
+    const theme = actionEl.dataset.themeChoice;
+    if (theme === 'light' || theme === 'dark') setTheme(theme);
+    return;
+  }
   const id = actionEl.dataset.id;
   if (state.phase === 'processing') return;
 
