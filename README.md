@@ -9,6 +9,7 @@ A pixel-art concert ticket-booking app with simulated payments. It uses Vite and
 - Add or remove seats and see the ticket count, subtotal, 12% service fee, and total update immediately.
 - Complete a simulated checkout to get a ticket-style confirmation with an order ID and purchased seats.
 - Book on desktop or mobile, with a sticky mobile checkout bar and a horizontally scrollable seat map.
+- Switch between **Light** and **Dark** in the seat-picker header. The initial theme follows your system, and an explicit choice is remembered on this browser. Switching themes preserves seats and checkout progress; the theater entrance retains its stage lighting.
 
 ## UI improvements
 
@@ -39,6 +40,14 @@ The curtains open to reveal the tour teaser, upcoming dates, and reservation tic
 Select **Proceed to Seat Map** to continue into the existing interactive arena and checkout experience.
 
 ![Seat-selection page shown after proceeding from the theater introduction](docs/screenshots/seat-map-handoff.png)
+
+### 4. Choose your theme
+
+Use **Light** for warm off-white surfaces or **Dark** for charcoal surfaces. Both themes include matching seat states, cart, checkout controls, and confirmation tickets, with rose accents and visible keyboard focus. If browser storage is unavailable, switching still works for the current page.
+
+Open Floor seats and the **Open** legend are blue in both themes; Lower Bowl and Upper Bowl retain their red and green tier colors.
+
+For a reproducible preview, add `?scoutTheme=light` or `?scoutTheme=dark` to the app URL. A valid URL override takes precedence over the saved preference on page load; using the header buttons saves a new preference.
 
 ## Run locally
 

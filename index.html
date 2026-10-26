@@ -4,6 +4,30 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nova &amp; the Lighthouses — Midnight Mona Tour</title>
+    <script>
+      (() => {
+        const param = new URLSearchParams(window.location.search).get("scoutTheme");
+        const theme =
+          param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.setAttribute("data-theme", theme);
+        const root = document.documentElement;
+        root.dataset.themeSource = "system";
+        let saved = null;
+        try {
+          saved = localStorage.getItem("nova-theme");
+        } catch (error) {
+          console.warn("Theme preference could not be read.", error);
+        }
+        if (param === "light" || param === "dark") {
+          root.dataset.themeSource = "url";
+        } else if (saved === "light" || saved === "dark") {
+          root.dataset.theme = saved;
+          root.dataset.themeSource = "saved";
+        } else {
+          root.dataset.theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
