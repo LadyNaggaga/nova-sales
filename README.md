@@ -67,6 +67,20 @@ npm run preview    # preview the production build
 | `src/mascot.ts` | The pixel mascot (drawn from a character map) and the cursor look-at behaviour |
 | `src/style.css` | All styles; colours and fonts are custom properties at the top |
 
+## UI assets
+
+New pixel-art UI assets live under `public/` as standalone, optimized SVGs so they can be reused outside of inline TypeScript markup and served directly by Vite at the site root.
+
+| Asset | Path | Used for |
+| --- | --- | --- |
+| Favicon / app icon | `public/favicon.svg` | Browser tab icon, linked from `index.html` (`<link rel="icon">`); simplified version of the pixel mascot |
+| Favorite/star marker | `public/assets/icons/star.svg` | Highlighting a shopper's favorite or recommended seat tier in the seat map |
+| Ticket | `public/assets/icons/ticket.svg` | Order-confirmation and receipt-style UI, alongside the existing ticket copy |
+| Close / remove | `public/assets/icons/close.svg` | A crisper pixel alternative to the plain `×` glyph used by the cart's remove button (`.btn-x`) |
+| Sound on / off | `public/assets/icons/sound-on.svg`, `public/assets/icons/sound-off.svg` | A crisper pixel alternative to the `♫` / `♪` glyphs on the theater intro's sound toggle |
+
+All assets follow the same 1px-per-grid-cell, `shape-rendering="crispEdges"` pixel style as `src/mascot.ts`, and reuse the existing colour custom properties from `src/style.css` (e.g. `--purple`, `--mustard`, `--rust`, `--pink`, `--cyan`) so new icons stay visually consistent. To add a new asset: sketch it on a small character grid, map characters to palette colours, and export it as a flat SVG of 1x1 `<rect>` pixels (see the `rects` helper in `src/mascot.ts` for the pattern used to generate these files).
+
 ## Booking tickets
 
 Select available seats, review the subtotal and 12% service fee, then click **Pay**. Checkout displays a processing state for approximately 1.5 seconds before confirming the order. Seat changes and repeated payments are blocked during processing.
