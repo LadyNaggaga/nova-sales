@@ -5,6 +5,15 @@ import { attachLookAt, mascotSVG } from './mascot';
 
 const PAYMENT_DELAY_MS = 1500;
 const LOW_TICKETS_THRESHOLD = 20;
+const DEMO_SEAT_IDS = ['floor-A2', 'lower-A2'];
+const DEMO_ORDER_ID = 'NL-CLOUD-DEMO';
+
+type DemoScene = 'seat-map' | 'confirmation';
+
+const demoScene = (() => {
+  const scene = new URLSearchParams(window.location.search).get('demo');
+  return scene === 'seat-map' || scene === 'confirmation' ? scene : null;
+})();
 
 /** Tiny pixel heart icon shown on seats the shopper has picked. */
 const HEART_ICON = `<svg class="seat-icon" viewBox="0 0 7 6" shape-rendering="crispEdges" aria-hidden="true">
@@ -23,9 +32,9 @@ function confettiHTML(): string {
   let out = '';
   for (let i = 0; i < 72; i++) {
     const left = ((i + 0.5) / 72) * 100;
-    const drift = Math.round(Math.random() * 160 - 80);
+    const drift = ((i * 47) % 161) - 80;
     const spin = (i % 2 === 0 ? 1 : -1) * 360;
-    const delay = (Math.random() * 0.8).toFixed(2);
+    const delay = (((i * 13) % 80) / 100).toFixed(2);
     const color = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
     out += `<i style="--x:${left}%;--drift:${drift}px;--spin:${spin}deg;--d:${delay}s;--c:${color}"></i>`;
   }
@@ -124,7 +133,7 @@ function mount() {
     <div class="intro-marquee">
       <span class="marquee-bulbs" aria-hidden="true"></span>
       <span class="intro-kicker pixel">ONE NIGHT ONLY</span>
-      <h1 class="pixel intro-title" id="intro-title">${esc(EVENT.tour.toUpperCase()).replace(' ', '<br />')}</h1>
+      <h1 class="pixel intro-title" id="intro-title" aria-label="${esc(EVENT.tour)}">${esc(EVENT.tour.toUpperCase()).replace(' ', '<br />')}</h1>
       <p class="intro-artist">${esc(EVENT.artist)}</p>
       <p class="intro-meta pixel">${esc(EVENT.date)} · ${esc(EVENT.venue)}</p>
       <button class="btn intro-enter" data-action="open-curtain">ENTER THE THEATER</button>
@@ -150,7 +159,7 @@ function mount() {
       <div class="hero-row">
         <div class="hero-copy">
           <span class="pill"><span class="dot">●</span> ON SALE NOW</span>
-          <h1 class="pixel hero-title">${esc(EVENT.tour.toUpperCase()).replace(' ', '<br />')}</h1>
+          <h1 class="pixel hero-title" aria-label="${esc(EVENT.tour)}">${esc(EVENT.tour.toUpperCase()).replace(' ', '<br />')}</h1>
           <p class="hero-meta">${esc(`${EVENT.date} · ${EVENT.doors} · ${EVENT.venue}`)}</p>
         </div>
         <div class="counter" aria-live="polite">
@@ -356,14 +365,39 @@ function confirmOrder(orderId: string, total: number, picked: Seat[]) {
   state.order = { id: orderId, total, seats: picked.map(seatName) };
   state.phase = 'confirmed';
   render();
+  launchCelebration(demoScene === 'confirmation');
+}
+
+function launchCelebration(persist = false) {
   if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     const celebration = document.createElement('div');
     celebration.className = 'confetti';
     celebration.setAttribute('aria-hidden', 'true');
     celebration.innerHTML = confettiHTML();
     document.body.appendChild(celebration);
-    window.setTimeout(() => celebration.remove(), 4000);
+    if (!persist) window.setTimeout(() => celebration.remove(), 4000);
   }
+}
+
+function openDemoScene(scene: DemoScene) {
+  const intro = $('#tour-intro');
+  const page = $('.page');
+  state.introPhase = 'entered';
+  document.body.classList.remove('intro-active');
+  intro.hidden = true;
+  page.inert = false;
+  page.removeAttribute('aria-hidden');
+
+  const picked = state.seats.filter((seat) => DEMO_SEAT_IDS.includes(seat.id) && !seat.sold);
+  picked.forEach((seat) => state.selected.add(seat.id));
+
+  if (scene === 'confirmation') {
+    const { total } = totals();
+    confirmOrder(DEMO_ORDER_ID, total, picked);
+    return;
+  }
+
+  render();
 }
 
 // ---------- events ----------
@@ -570,4 +604,5 @@ document.addEventListener('keydown', (e) => {
 });
 
 mount();
-render();
+if (demoScene) openDemoScene(demoScene);
+else render();
