@@ -41,6 +41,18 @@ Select **Proceed to Seat Map** to continue into the existing interactive arena a
 
 ![Seat-selection page shown after proceeding from the theater introduction](docs/screenshots/seat-map-handoff.png)
 
+## Cloud Sessions demo
+
+The flagship Cloud Sessions / Cloud Sandboxes presentation uses this app as the customer request and visual proof. See [`docs/cloud-sessions-demo.md`](docs/cloud-sessions-demo.md) for the changelog-aligned 90-second run of show, prompts, product claims, and verification checklist.
+
+Repeatable capture routes keep live demos and screenshots consistent without changing the default customer journey:
+
+| Route | Scene |
+| --- | --- |
+| `/` | Normal interactive theater and booking flow |
+| `/?demo=seat-map` | Seat map with one Floor and one Lower Bowl seat selected |
+| `/?demo=confirmation` | Stable successful order with persistent pixel confetti |
+
 ## Run locally
 
 ```bash
