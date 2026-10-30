@@ -1,4 +1,4 @@
-// Venue, tiers and seat inventory for the Midnight Mona Tour.
+// Venue, tiers and seat inventory for the Day Mona Tour.
 
 export type TierId = 'floor' | 'lower' | 'upper';
 
@@ -26,7 +26,7 @@ export interface Seat {
 
 export const EVENT = {
   artist: 'Nova & the Lighthouses',
-  tour: 'Midnight Mona Tour',
+  tour: 'Day Mona Tour',
   date: 'Fri, Nov 14',
   doors: 'Doors 7pm',
   venue: 'Harborline Arena',
@@ -35,7 +35,7 @@ export const EVENT = {
 export const SERVICE_FEE_RATE = 0.12;
 
 export const TIERS: Tier[] = [
-  { id: 'floor', name: 'Floor', price: 185, rows: 3, perRow: 12, color: '#ffd84d', curve: 0 },
+  { id: 'floor', name: 'Floor', price: 185, rows: 3, perRow: 12, color: '#4d9fff', curve: 0 },
   { id: 'lower', name: 'Lower Bowl', price: 120, rows: 3, perRow: 18, color: '#e0662a', curve: 14 },
   { id: 'upper', name: 'Upper Bowl', price: 65, rows: 3, perRow: 22, color: '#5bbf55', curve: 22 },
 ];
