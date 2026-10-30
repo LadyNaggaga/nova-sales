@@ -83,7 +83,7 @@ const ticketsLeft = () => state.seats.filter((s) => !s.sold && !state.selected.h
 
 function mount() {
   $('#app').innerHTML = `
-  <section class="tour-intro" id="tour-intro" aria-labelledby="intro-title">
+  <section class="tour-intro" id="tour-intro" role="dialog" aria-modal="true" aria-labelledby="intro-title">
     <span class="stage-lamp stage-lamp-left" aria-hidden="true"></span>
     <span class="stage-lamp stage-lamp-right" aria-hidden="true"></span>
     <div class="intro-spotlights" aria-hidden="true">
@@ -188,7 +188,8 @@ function mount() {
             <span><i class="swatch swatch-sold"></i>Sold ×</span>
           </div>
         </div>
-        <div class="seatmap-scroll">
+        <p class="seatmap-hint" id="seatmap-hint">Swipe sideways to browse every seat.</p>
+        <div class="seatmap-scroll" role="region" aria-label="Scrollable seat map" aria-describedby="seatmap-hint" tabindex="0">
           <div class="venue" id="venue">
             <div class="stage pixel">STAGE</div>
           </div>
@@ -267,11 +268,11 @@ function renderCart() {
   if (state.phase === 'confirmed' && state.order) {
     const o = state.order;
     cart.innerHTML = `
-      <section class="ticket pop" aria-label="Order confirmed">
+      <section class="ticket pop" aria-labelledby="confirmation-title">
         <div class="ticket-body">
           <div class="pixel ticket-success">BOOKING COMPLETE</div>
           <div class="pixel ticket-kicker">ADMIT ${o.seats.length} · ${esc(EVENT.tour.toUpperCase())}</div>
-          <div class="pixel ticket-title">SEE YOU AT THE SHOW!</div>
+          <h2 class="pixel ticket-title" id="confirmation-title" tabindex="-1">SEE YOU AT THE SHOW!</h2>
           <div class="ticket-meta">Order ${esc(o.id)} · ${money(o.total)}</div>
           <ul class="ticket-seats">${o.seats.map((seat) => `<li>${esc(seat)}</li>`).join('')}</ul>
           <p class="ticket-note">Simulated payment — no real charge.</p>
@@ -365,7 +366,20 @@ function confirmOrder(orderId: string, total: number, picked: Seat[]) {
   state.order = { id: orderId, total, seats: picked.map(seatName) };
   state.phase = 'confirmed';
   render();
+  focusConfirmation();
   launchCelebration(demoScene === 'confirmation');
+}
+
+function focusConfirmation() {
+  const heading = document.querySelector<HTMLElement>('#confirmation-title');
+  if (!heading) return;
+
+  heading.focus({ preventScroll: true });
+  heading.closest('.ticket')?.scrollIntoView({
+    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+    block: 'start',
+    inline: 'nearest',
+  });
 }
 
 function launchCelebration(persist = false) {

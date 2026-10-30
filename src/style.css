@@ -81,12 +81,14 @@ h1, h2 { margin: 0; }
 }
 .intro-reveal {
   position: absolute;
-  inset: 0 0 13%;
+  inset: 88px 24px max(13%, 72px);
   z-index: 2;
   overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   opacity: 0;
   visibility: hidden;
-  padding: 148px 11vw 48px;
+  padding: 60px 8vw 48px;
   background:
     linear-gradient(90deg, transparent 0 49%, rgba(91, 63, 240, 0.16) 49% 51%, transparent 51%),
     var(--stage-wine);
@@ -109,7 +111,7 @@ h1, h2 { margin: 0; }
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  min-height: 38px;
+  min-height: 44px;
   padding: 0 12px;
   background: var(--panel);
   color: var(--ink);
@@ -510,7 +512,7 @@ h1, h2 { margin: 0; }
   z-index: 9;
   right: 18px;
   top: 76px;
-  min-height: 36px;
+  min-height: 44px;
   padding: 0 10px;
   background: var(--panel);
   color: var(--ink);
@@ -728,8 +730,21 @@ h1, h2 { margin: 0; }
 .swatch-mine { background: var(--lavender); border-color: #fff; }
 .swatch-sold { background: repeating-linear-gradient(135deg, #2a2f38 0 3px, #20242c 3px 6px); }
 
-.seatmap-scroll { overflow-x: auto; padding: 8px 4px 4px; }
-.venue { min-width: 600px; display: flex; flex-direction: column; align-items: center; gap: 26px; }
+.seatmap-hint {
+  display: none;
+  margin: -8px 0 12px;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+.seatmap-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 8px 4px 12px;
+  overscroll-behavior-inline: contain;
+  scrollbar-gutter: stable;
+}
+.seatmap-scroll:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.venue { width: max-content; min-width: 100%; display: flex; flex-direction: column; align-items: center; gap: 26px; }
 .stage {
   width: 60%;
   text-align: center;
@@ -895,12 +910,38 @@ h1, h2 { margin: 0; }
 }
 .mobile-bar[hidden] { display: none; }
 @media (max-width: 760px) {
+  .page { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+  .topbar, .hero, .layout { padding-left: 12px; padding-right: 12px; }
+  .layout { margin-top: 24px; gap: 20px; }
+  .panel { padding: 18px 10px; }
+  .seatmap { flex-basis: 100%; max-width: 100%; overflow: hidden; }
+  .seatmap-head { margin-bottom: 14px; padding: 0 4px; }
+  .seatmap-head h2 { font-size: 18px; }
+  .legend { gap: 10px; font-size: 13px; }
+  .seatmap-hint { display: block; padding: 0 4px; }
+  .seatmap-scroll { margin: 0 -2px; padding: 8px 4px 16px; }
+  .venue { gap: 20px; }
+  .stage { min-width: 240px; }
+  .tier { align-items: flex-start; }
+  .tier-label { position: sticky; left: 0; z-index: 1; padding: 4px 8px; background: var(--panel); }
+  .row { gap: 12px; }
+  .row-half { gap: 4px; }
+  .seat { width: 44px; height: 44px; flex: 0 0 44px; }
+  .seat-icon { width: 17px; }
+  .btn-x { width: 44px; height: 44px; }
   .mobile-bar { display: flex; }
   .mascot { width: 110px; left: 55%; }
   .intro-marquee { width: 82vw; padding: 34px 18px 28px; border-width: 6px; }
   .intro-title { letter-spacing: -2px; }
   .intro-meta { line-height: 1.7; }
-  .intro-reveal { bottom: 11%; padding: 76px 54px 32px; }
+  .intro-reveal {
+    inset: 64px 10px max(11%, 64px);
+    z-index: 8;
+    padding: 42px 14px 28px;
+    border: 3px solid #000;
+    box-shadow: 6px 6px 0 #000;
+  }
+  .tour-teaser { min-height: auto; justify-content: flex-start; }
   .tour-details { grid-template-columns: 1fr; margin-top: 20px; }
   .tour-stops > div { grid-template-columns: 58px 1fr; gap: 8px; }
   .tour-stops em { grid-column: 2; margin-top: -8px; }
@@ -909,8 +950,8 @@ h1, h2 { margin: 0; }
   .curtain { width: 50.8%; bottom: 10%; }
   .curtain-valance { height: 14%; min-height: 94px; }
   .intro-floor { height: 11%; min-height: 64px; }
-  .intro-back { left: 12px; top: 16px; }
-  .sound-toggle { right: 10px; top: 68px; }
+  .intro-back { left: 12px; top: 12px; }
+  .sound-toggle { right: 10px; top: 12px; }
   .spotlight { width: 58vw; }
 }
 
