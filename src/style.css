@@ -878,7 +878,8 @@ button:hover:not(:disabled) .icon-sound-off { filter: drop-shadow(0 0 4px var(--
 .cart-price { display: flex; align-items: center; gap: 8px; }
 .perf { border-top: 3px dashed var(--night); margin: 0 14px; }
 .cart-totals { padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 8px; font-size: 15px; }
-.cart-totals > div { display: flex; justify-content: space-between; }
+/* :not(.bento-totals) keeps this from clobbering the bento grid's own `display: grid` below. */
+.cart-totals > div:not(.bento-totals) { display: flex; justify-content: space-between; }
 .cart-total { font-size: 22px; margin-top: 6px; }
 
 /* ---------- bento-grid checkout summary ---------- */
@@ -1020,58 +1021,328 @@ button:hover:not(:disabled) .icon-sound-off { filter: drop-shadow(0 0 4px var(--
   .seat, .btn, .mascot-head, .mascot-eyes, .curtain, .curtain-valance, .intro-marquee, .intro-reveal { transition: none; }
 }
 
-/* ---------- arcade / CRT dark-mode toggle ---------- */
+/* =====================================================================
+   Modern & clean redesign — applies only to `.page` (the seat-map /
+   checkout shopping experience). The pixel-art theater intro above is
+   left untouched on purpose: it's the one "key moment" that keeps the
+   pixel-art/mascot flavor, while the shopping flow gets an open, airy
+   layout with a neutral palette, two accent colors, soft shadows and
+   rounded corners instead of hard neo-brutalist borders.
+   ===================================================================== */
 
-:root[data-theme='arcade'] {
-  --bg: #05060a;
-  --panel: #0a0d14;
-  --panel-2: #0c0f18;
-  --ink: #eafcff;
-  --cream: #0e1a16;
-  color-scheme: dark;
+:root {
+  --m-font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --m-font-serif: 'Fraunces', 'Inter', serif;
+
+  --m-bg: #faf9f6;
+  --m-surface: #ffffff;
+  --m-surface-muted: #f2f0ec;
+  --m-ink: #22242b;
+  --m-ink-soft: #6b6d76;
+  --m-line: #e7e4de;
+
+  --m-accent: #e0662a; /* warm coral — primary accent, echoes the Lower Bowl tier */
+  --m-accent-ink: #ffffff;
+  --m-accent-2: #6a5acd; /* soft violet — secondary accent, used sparingly */
+  --m-accent-2-soft: #efecfb;
+  --m-success: #2f9e6e;
+
+  --m-radius-lg: 28px;
+  --m-radius-md: 18px;
+  --m-radius-sm: 12px;
+  --m-shadow-soft: 0 1px 2px rgba(34, 36, 43, 0.04), 0 10px 30px -14px rgba(34, 36, 43, 0.18);
+  --m-shadow-float: 0 20px 44px -20px rgba(34, 36, 43, 0.28);
+
+  /* dark-mode variant, scoped under `:root[data-theme='arcade'] .page` below */
+  --m-bg-dark: #15171c;
+  --m-surface-dark: #1d2026;
+  --m-surface-muted-dark: #24272e;
+  --m-ink-dark: #f2f1ee;
+  --m-ink-soft-dark: #a9abb3;
+  --m-line-dark: #2e3139;
 }
-:root[data-theme='arcade'] body::before {
-  background-image:
-    repeating-linear-gradient(180deg, rgba(77, 219, 255, 0.08) 0 1px, transparent 1px 3px),
-    radial-gradient(circle at 1px 1px, rgba(77, 219, 255, 0.12) 1px, transparent 0);
-  animation: arcade-flicker 6s steps(30, end) infinite;
+
+.page {
+  background: var(--m-bg);
+  color: var(--m-ink);
+  font-family: var(--m-font-sans);
 }
-:root[data-theme='arcade'] .panel,
-:root[data-theme='arcade'] .btn,
-:root[data-theme='arcade'] .counter,
-:root[data-theme='arcade'] .theme-toggle,
-:root[data-theme='arcade'] .sound-toggle {
-  border-color: var(--cyan);
-  box-shadow: 0 0 0 1px var(--cyan), 0 0 14px 1px rgba(77, 219, 255, 0.45);
+
+.page .pixel,
+.mobile-bar .pixel {
+  font-family: var(--m-font-sans);
+  letter-spacing: 0;
 }
-:root[data-theme='arcade'] .cart {
-  border-color: var(--pink);
-  box-shadow: 0 0 0 1px var(--pink), 0 0 18px 2px rgba(255, 79, 163, 0.5);
+.page .hero-title,
+.page .ticket-title {
+  font-family: var(--m-font-serif);
+  letter-spacing: -0.015em;
 }
-:root[data-theme='arcade'] .cart,
-:root[data-theme='arcade'] .reservation-ticket,
-:root[data-theme='arcade'] .ticket,
-:root[data-theme='arcade'] .bento-tile {
-  background: #0e1420;
-  color: var(--cyan);
+
+/* ---------- shared button/pill resets for the page ---------- */
+
+.page .btn,
+.mobile-bar .btn {
+  border: none;
+  border-radius: 999px;
+  box-shadow: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
-:root[data-theme='arcade'] .bento-tile-total { background: #1a0a1a; color: var(--pink); }
-:root[data-theme='arcade'] .bento-tile span { color: var(--mustard); }
-:root[data-theme='arcade'] .hero-title,
-:root[data-theme='arcade'] .intro-title,
-:root[data-theme='arcade'] .pixel.cart-title {
-  text-shadow: 0 0 10px var(--cyan), 0 0 22px rgba(77, 219, 255, 0.6);
+.page .btn:active:not(:disabled) { transform: none !important; box-shadow: none !important; }
+.page .btn:hover:not(:disabled) { transform: translateY(-2px); }
+.page .btn:focus-visible,
+.page .seat:focus-visible { outline: 2px solid var(--m-accent-2); outline-offset: 2px; }
+
+.page .theme-toggle {
+  background: var(--m-surface-muted);
+  color: var(--m-ink);
+  font-size: 13px;
+  padding: 0 16px;
 }
-:root[data-theme='arcade'] .btn-pay {
-  background: var(--cyan);
-  color: #04131a;
-  box-shadow: 0 0 0 1px #000, 0 0 20px 4px rgba(77, 219, 255, 0.7);
+.page .theme-toggle[aria-pressed='true'] {
+  background: var(--m-ink);
+  color: var(--m-bg);
 }
-@keyframes arcade-flicker {
-  0%, 96%, 100% { opacity: 1; }
-  97% { opacity: 0.85; }
-  98% { opacity: 1; }
+
+.page .btn-pay {
+  background: var(--m-accent);
+  color: var(--m-accent-ink);
+  box-shadow: 0 12px 24px -10px rgba(224, 102, 42, 0.55);
+  animation: none;
 }
-@media (prefers-reduced-motion: reduce) {
-  :root[data-theme='arcade'] body::before { animation: none; }
+.page .btn-pay:hover:not(:disabled) { box-shadow: 0 16px 30px -10px rgba(224, 102, 42, 0.6); }
+.page .btn-pay:disabled { background: var(--m-surface-muted); color: var(--m-ink-soft); }
+
+.page .btn-cream {
+  background: var(--m-surface-muted);
+  color: var(--m-ink);
+}
+.page .btn-x {
+  background: var(--m-surface-muted);
+  color: var(--m-ink-soft);
+  border-radius: 50%;
+}
+
+/* ---------- top bar + hero ---------- */
+
+.page .topbar { border-bottom: 1px solid var(--m-line); }
+.page .brand-chip {
+  border: none;
+  border-radius: 10px;
+  background: var(--m-surface-muted);
+}
+
+.page .pill {
+  border: none;
+  border-radius: 999px;
+  background: var(--m-accent-2-soft);
+  color: var(--m-accent-2);
+  box-shadow: none;
+}
+
+.page .hero-title { font-weight: 650; }
+.page .hero-title:focus { outline: 2px solid var(--m-accent-2); outline-offset: 6px; border-radius: 4px; }
+.page .hero-meta { color: var(--m-ink-soft); }
+
+.page .checker-strip {
+  border: none;
+  background: transparent;
+  margin-top: 36px;
+  height: auto;
+  display: block;
+}
+.page .checker-strip .tile { display: none; }
+.page .mascot {
+  position: static;
+  width: 86px;
+  float: right;
+  margin: -92px 0 0;
+  background: var(--m-accent-2-soft);
+  border-radius: var(--m-radius-md);
+  box-shadow: var(--m-shadow-soft);
+  padding: 8px;
+}
+
+.page .counter {
+  background: var(--m-surface);
+  border: 1px solid var(--m-line);
+  border-radius: var(--m-radius-md);
+  box-shadow: var(--m-shadow-soft);
+  padding: 16px 22px;
+}
+.page .counter-label { color: var(--m-ink-soft); }
+.page .counter-value { color: var(--m-accent); }
+.page .counter--low { background: var(--m-surface); animation: none; }
+.page .counter--low .counter-value { color: var(--m-accent-2); }
+
+/* ---------- seat map ---------- */
+
+.page .panel {
+  background: var(--m-surface);
+  border: 1px solid var(--m-line);
+  border-radius: var(--m-radius-lg);
+  box-shadow: var(--m-shadow-soft);
+  padding: 32px;
+}
+.page .legend { color: var(--m-ink-soft); }
+.page .swatch { border-radius: 50%; border: none; }
+.page .swatch-open { background: var(--m-accent); }
+.page .swatch-mine { background: var(--m-accent-2); border: none; }
+.page .swatch-sold { background: var(--m-surface-muted); }
+
+.page .stage {
+  background: var(--m-surface-muted);
+  color: var(--m-ink-soft);
+  border: none;
+  border-radius: 999px;
+  box-shadow: none;
+  letter-spacing: 0.18em;
+}
+
+.page .tier-badge {
+  border: none;
+  background: var(--m-surface-muted);
+  border-radius: var(--m-radius-sm);
+  box-shadow: none;
+}
+.page .tier-badge-floor,
+.page .tier-badge-lower,
+.page .tier-badge-upper { box-shadow: none; }
+
+.page .seat {
+  border: none;
+  border-radius: 7px;
+  color: #fff;
+  font-family: var(--m-font-sans);
+}
+.page .seat:hover:not(:disabled) { box-shadow: 0 0 0 2px var(--m-ink); }
+.page .seat.is-mine { background: var(--m-accent-2); outline: 2px solid var(--m-ink); outline-offset: 1px; }
+.page .seat.is-sold {
+  background: var(--m-surface-muted);
+  color: var(--m-ink-soft);
+}
+
+/* ---------- cart / checkout ---------- */
+
+.page .cart {
+  background: var(--m-surface);
+  border: 1px solid var(--m-line);
+  border-radius: var(--m-radius-lg);
+  box-shadow: var(--m-shadow-soft);
+  color: var(--m-ink);
+}
+.page .cart-head {
+  background: transparent;
+  border-bottom: 1px solid var(--m-line);
+  padding: 20px 24px 16px;
+}
+.page .cart-title {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 16px;
+}
+.page .cart-items { padding: 20px 24px; }
+.page .cart-item {
+  background: var(--m-surface-muted);
+  border-radius: var(--m-radius-sm);
+  padding: 10px 14px;
+  font-size: 14px;
+}
+.page .perf { border-top: 1px dashed var(--m-line); }
+.page .cart-totals { padding: 16px 24px 24px; }
+
+.page .bento-totals { grid-template-areas: 'total total' 'sub fee' 'seats seats'; }
+.page .bento-tile {
+  border: none;
+  background: var(--m-surface-muted);
+  border-radius: var(--m-radius-sm);
+  box-shadow: none;
+}
+.page .bento-tile span { color: var(--m-accent); }
+.page .bento-tile-total {
+  background: var(--m-surface);
+  border: 1px dashed var(--m-line);
+  box-shadow: none;
+}
+.page .bento-tile-total span { color: var(--m-ink-soft); }
+.page .bento-tile-seats { background: var(--m-accent-2-soft); }
+.page .bento-tile-seats span { color: var(--m-accent-2); }
+.page .payment-note { color: var(--m-ink-soft); }
+
+/* ---------- confirmation ticket ---------- */
+
+.page .ticket {
+  background: var(--m-surface);
+  border: 1px solid var(--m-line);
+  border-radius: var(--m-radius-lg);
+  box-shadow: var(--m-shadow-float);
+  color: var(--m-ink);
+  overflow: hidden;
+}
+.page .ticket::before { display: none; }
+.page .ticket-kicker { color: var(--m-accent); text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px; }
+.page .ticket-meta,
+.page .ticket-note { color: var(--m-ink-soft); }
+.page .ticket-stub {
+  background: var(--m-surface-muted);
+  border-left: 1px dashed var(--m-line);
+}
+.page .confetti i { border: none; border-radius: 2px; }
+
+/* ---------- mobile checkout bar ---------- */
+
+.mobile-bar {
+  background: var(--m-surface);
+  border-top: 1px solid var(--m-line);
+  box-shadow: 0 -10px 30px -18px rgba(34, 36, 43, 0.25);
+}
+
+/* ---------- dark mode (the former "arcade" toggle), scoped to .page only
+   so the pixel theater intro keeps its own look regardless of the toggle ---------- */
+
+:root[data-theme='arcade'] .page {
+  background: var(--m-bg-dark);
+  color: var(--m-ink-dark);
+}
+:root[data-theme='arcade'] .page .topbar { border-color: var(--m-line-dark); }
+:root[data-theme='arcade'] .page .panel,
+:root[data-theme='arcade'] .page .cart,
+:root[data-theme='arcade'] .page .ticket,
+:root[data-theme='arcade'] .page .counter {
+  background: var(--m-surface-dark);
+  border-color: var(--m-line-dark);
+  color: var(--m-ink-dark);
+}
+:root[data-theme='arcade'] .page .brand-chip,
+:root[data-theme='arcade'] .page .theme-toggle,
+:root[data-theme='arcade'] .page .tier-badge,
+:root[data-theme='arcade'] .page .stage,
+:root[data-theme='arcade'] .page .cart-item,
+:root[data-theme='arcade'] .page .bento-tile,
+:root[data-theme='arcade'] .page .ticket-stub,
+:root[data-theme='arcade'] .page .btn-cream,
+:root[data-theme='arcade'] .page .btn-x {
+  background: var(--m-surface-muted-dark);
+  color: var(--m-ink-dark);
+}
+:root[data-theme='arcade'] .page .bento-tile-total { background: var(--m-surface-dark); border-color: var(--m-line-dark); }
+:root[data-theme='arcade'] .page .hero-meta,
+:root[data-theme='arcade'] .page .counter-label,
+:root[data-theme='arcade'] .page .legend,
+:root[data-theme='arcade'] .page .ticket-meta,
+:root[data-theme='arcade'] .page .ticket-note,
+:root[data-theme='arcade'] .page .cart-empty {
+  color: var(--m-ink-soft-dark);
+}
+:root[data-theme='arcade'] .page .perf,
+:root[data-theme='arcade'] .page .cart-head,
+:root[data-theme='arcade'] .page .mobile-bar { border-color: var(--m-line-dark); }
+:root[data-theme='arcade'] .page .theme-toggle[aria-pressed='true'] {
+  background: var(--m-accent);
+  color: var(--m-accent-ink);
+}
+:root[data-theme='arcade'] .mobile-bar {
+  background: var(--m-surface-dark);
+  border-color: var(--m-line-dark);
 }
