@@ -52,6 +52,38 @@ body::before {
 .pixel { font-family: var(--pixel); }
 h1, h2 { margin: 0; }
 
+/* ---------- animated icon set ---------- */
+
+.icon {
+  width: 16px;
+  height: auto;
+  display: inline-block;
+  vertical-align: middle;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+.btn .icon { margin-right: 2px; }
+button:hover:not(:disabled) .icon,
+.pill:hover .icon {
+  animation: icon-wiggle 0.42s ease;
+}
+button:active:not(:disabled) .icon {
+  transform: scale(0.82) rotate(0deg);
+}
+.icon-star { filter: drop-shadow(0 0 0 transparent); }
+button:hover:not(:disabled) .icon-star,
+.pill:hover .icon-star { filter: drop-shadow(0 0 5px var(--mustard)); }
+button:hover:not(:disabled) .icon-ticket,
+.cart-title:hover .icon-ticket { filter: drop-shadow(0 0 5px var(--rust)); }
+button:hover:not(:disabled) .icon-close { filter: drop-shadow(0 0 5px var(--pink)); }
+button:hover:not(:disabled) .icon-sound-on { filter: drop-shadow(0 0 6px var(--cyan)); }
+button:hover:not(:disabled) .icon-sound-off { filter: drop-shadow(0 0 4px var(--muted)); }
+@keyframes icon-wiggle {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  30% { transform: scale(1.28) rotate(-10deg); }
+  60% { transform: scale(1.14) rotate(8deg); }
+}
+.cart-title { display: inline-flex; align-items: center; gap: 8px; }
+
 .page { position: relative; z-index: 1; min-height: 100vh; padding-bottom: 96px; }
 
 /* ---------- tour intro ---------- */
@@ -299,6 +331,18 @@ h1, h2 { margin: 0; }
     -4px 4px 0 #000,
     4px 4px 0 #000,
     7px 7px 0 var(--purple);
+}
+
+/* ---------- kinetic pixel typography ---------- */
+
+.kinetic-ch {
+  display: inline-block;
+  animation: kinetic-bounce 1.1s steps(4, end) infinite;
+  animation-delay: calc(var(--i, 0) * 0.045s);
+}
+@keyframes kinetic-bounce {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(-3deg); }
 }
 .intro-artist {
   margin: 0;
@@ -556,12 +600,13 @@ h1, h2 { margin: 0; }
 .btn {
   font-family: var(--pixel);
   cursor: pointer;
-  border: 2px solid #000;
+  border: 3px solid #000;
   transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
-.btn:active:not(:disabled) { transform: translate(4px, 4px); box-shadow: 0 0 0 #000 !important; }
+.btn:active:not(:disabled) { transform: translate(4px, 4px) !important; box-shadow: 0 0 0 #000 !important; }
 .btn:disabled { cursor: not-allowed; }
 .btn:focus-visible, .seat:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.btn:hover:not(:disabled) { transform: translate(-2px, -2px); }
 
 .btn-pay {
   min-height: 56px;
@@ -590,7 +635,8 @@ h1, h2 { margin: 0; }
   color: var(--night);
   box-shadow: 4px 4px 0 #000;
 }
-.btn-x { width: 32px; height: 32px; background: #fff; color: var(--night); }
+.btn-x { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; background: #fff; color: var(--night); }
+.btn-x .icon { margin-right: 0; width: 14px; }
 
 /* ---------- header + hero ---------- */
 
@@ -612,11 +658,26 @@ h1, h2 { margin: 0; }
   border: 2px solid #000;
   background: repeating-conic-gradient(var(--mustard) 0 25%, var(--purple) 0 50%) 0 0 / 14px 14px;
 }
+.theme-toggle {
+  min-height: 38px;
+  padding: 0 14px;
+  font-size: 11px;
+  background: var(--panel-2);
+  color: var(--ink);
+  box-shadow: 4px 4px 0 #000;
+}
+.theme-toggle[aria-pressed='true'] {
+  background: var(--night);
+  color: var(--cyan);
+  box-shadow: 4px 4px 0 var(--cyan), 0 0 14px 2px rgba(77, 219, 255, 0.55);
+}
 
 .hero-row { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-end; justify-content: space-between; }
 .hero-copy { flex: 1 1 520px; min-width: 0; }
 .pill {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--pixel);
   font-size: 13px;
   background: var(--green);
@@ -711,8 +772,8 @@ h1, h2 { margin: 0; }
   background-repeat: no-repeat;
   background-size: 6px 6px;
   background-position: top 10px left 10px, top 10px right 10px, bottom 10px left 10px, bottom 10px right 10px;
-  border: 3px solid #000;
-  box-shadow: 8px 8px 0 #000;
+  border: 4px solid #000;
+  box-shadow: 9px 9px 0 #000, 14px 14px 0 var(--purple);
   padding: 24px;
 }
 .side { flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 28px; }
@@ -746,6 +807,18 @@ h1, h2 { margin: 0; }
 .tier { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
 .tier-label { display: flex; align-items: center; gap: 10px; font-size: 13px; }
 .tier-label .swatch { width: 12px; height: 12px; }
+
+/* bento-grid style importance-sized tier badges: the pricier the tier, the
+   bolder/bigger its badge, so the seat map reads like a bento layout. */
+.tier-badge {
+  border: 3px solid #000;
+  background: var(--panel-2);
+  padding: 6px 12px;
+  box-shadow: 4px 4px 0 #000;
+}
+.tier-badge-floor { border-width: 4px; padding: 10px 18px; box-shadow: 7px 7px 0 #000; font-size: 16px; }
+.tier-badge-lower { padding: 8px 15px; box-shadow: 5px 5px 0 #000; font-size: 14px; }
+.tier-badge-upper { padding: 5px 10px; box-shadow: 3px 3px 0 #000; font-size: 12px; }
 .row { display: flex; align-items: center; gap: 22px; }
 .row-half { display: flex; gap: 5px; }
 .row-letter { width: 14px; font-size: 11px; color: var(--muted); text-align: center; }
@@ -790,8 +863,8 @@ h1, h2 { margin: 0; }
   background-size: 6px 6px;
   background-position: top 10px left 10px, top 10px right 10px, bottom 10px left 10px, bottom 10px right 10px;
   color: var(--night);
-  border: 3px solid #000;
-  box-shadow: 8px 8px 0 var(--purple);
+  border: 4px solid #000;
+  box-shadow: 9px 9px 0 var(--purple), 14px 14px 0 var(--pink);
 }
 .cart-head {
   padding: 18px 20px 14px;
@@ -807,6 +880,40 @@ h1, h2 { margin: 0; }
 .cart-totals { padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 8px; font-size: 15px; }
 .cart-totals > div { display: flex; justify-content: space-between; }
 .cart-total { font-size: 22px; margin-top: 6px; }
+
+/* ---------- bento-grid checkout summary ---------- */
+
+.bento-totals {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-areas:
+    'total total'
+    'sub fee'
+    'seats seats';
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.bento-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 3px solid #000;
+  background: var(--cream);
+  box-shadow: 4px 4px 0 #000;
+}
+.bento-tile span { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--purple); }
+.bento-tile strong { font-size: 18px; }
+.bento-tile-total {
+  grid-area: total;
+  background: var(--pink);
+  box-shadow: 6px 6px 0 #000;
+}
+.bento-tile-total span { color: var(--night); }
+.bento-tile-total strong { font-size: 28px; }
+.bento-tile-sub { grid-area: sub; }
+.bento-tile-fee { grid-area: fee; }
+.bento-tile-seats { grid-area: seats; background: var(--mint); }
 .payment-note { font-size: 13px; margin: 4px 0 0; }
 
 .ticket {
@@ -905,10 +1012,66 @@ h1, h2 { margin: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   .bob, .seat.pop, .pop, .btn-pay, .counter--low, .pill .dot, .mascot-blink, .mascot-head.cheer, .confetti i,
-  .intro-enter, .intro-proceed, .marquee-bulbs, .spotlight, .pixel-dust i, .performer {
+  .intro-enter, .intro-proceed, .marquee-bulbs, .spotlight, .pixel-dust i, .performer, .kinetic-ch, .icon {
     animation: none;
   }
   .confetti { display: none; }
   .pixel-dust { display: none; }
   .seat, .btn, .mascot-head, .mascot-eyes, .curtain, .curtain-valance, .intro-marquee, .intro-reveal { transition: none; }
+}
+
+/* ---------- arcade / CRT dark-mode toggle ---------- */
+
+:root[data-theme='arcade'] {
+  --bg: #05060a;
+  --panel: #0a0d14;
+  --panel-2: #0c0f18;
+  --ink: #eafcff;
+  --cream: #0e1a16;
+  color-scheme: dark;
+}
+:root[data-theme='arcade'] body::before {
+  background-image:
+    repeating-linear-gradient(180deg, rgba(77, 219, 255, 0.08) 0 1px, transparent 1px 3px),
+    radial-gradient(circle at 1px 1px, rgba(77, 219, 255, 0.12) 1px, transparent 0);
+  animation: arcade-flicker 6s steps(30, end) infinite;
+}
+:root[data-theme='arcade'] .panel,
+:root[data-theme='arcade'] .btn,
+:root[data-theme='arcade'] .counter,
+:root[data-theme='arcade'] .theme-toggle,
+:root[data-theme='arcade'] .sound-toggle {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 1px var(--cyan), 0 0 14px 1px rgba(77, 219, 255, 0.45);
+}
+:root[data-theme='arcade'] .cart {
+  border-color: var(--pink);
+  box-shadow: 0 0 0 1px var(--pink), 0 0 18px 2px rgba(255, 79, 163, 0.5);
+}
+:root[data-theme='arcade'] .cart,
+:root[data-theme='arcade'] .reservation-ticket,
+:root[data-theme='arcade'] .ticket,
+:root[data-theme='arcade'] .bento-tile {
+  background: #0e1420;
+  color: var(--cyan);
+}
+:root[data-theme='arcade'] .bento-tile-total { background: #1a0a1a; color: var(--pink); }
+:root[data-theme='arcade'] .bento-tile span { color: var(--mustard); }
+:root[data-theme='arcade'] .hero-title,
+:root[data-theme='arcade'] .intro-title,
+:root[data-theme='arcade'] .pixel.cart-title {
+  text-shadow: 0 0 10px var(--cyan), 0 0 22px rgba(77, 219, 255, 0.6);
+}
+:root[data-theme='arcade'] .btn-pay {
+  background: var(--cyan);
+  color: #04131a;
+  box-shadow: 0 0 0 1px #000, 0 0 20px 4px rgba(77, 219, 255, 0.7);
+}
+@keyframes arcade-flicker {
+  0%, 96%, 100% { opacity: 1; }
+  97% { opacity: 0.85; }
+  98% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme='arcade'] body::before { animation: none; }
 }

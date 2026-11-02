@@ -2,6 +2,7 @@ import './style.css';
 import { gsap } from 'gsap';
 import { buildSeats, EVENT, money, SERVICE_FEE_RATE, TIERS, type Seat } from './data';
 import { attachLookAt, mascotSVG } from './mascot';
+import { iconSVG } from './icons';
 
 const PAYMENT_DELAY_MS = 1500;
 const LOW_TICKETS_THRESHOLD = 20;
@@ -42,6 +43,8 @@ function dustHTML(): string {
 type Phase = 'shopping' | 'processing' | 'confirmed';
 type IntroPhase = 'closed' | 'open' | 'entered';
 
+const THEME_STORAGE_KEY = 'nova-theme';
+
 const state = {
   seats: buildSeats(),
   selected: new Set<string>(),
@@ -49,7 +52,16 @@ const state = {
   order: null as null | { id: string; total: number; seats: string[] },
   introPhase: 'closed' as IntroPhase,
   soundEnabled: false,
+  arcadeMode: localStorage.getItem(THEME_STORAGE_KEY) === 'arcade',
 };
+
+/** Kinetic pixel typography: wraps each glyph in its own span so style.css
+ * can stagger a bounce animation across the landing title. */
+function kineticText(text: string): string {
+  return [...text]
+    .map((ch, i) => `<span class="kinetic-ch" style="--i:${i}">${ch === ' ' ? '&nbsp;' : esc(ch)}</span>`)
+    .join('');
+}
 
 // ---------- helpers ----------
 
@@ -123,7 +135,7 @@ function mount() {
     <div class="intro-marquee">
       <span class="marquee-bulbs" aria-hidden="true"></span>
       <span class="intro-kicker pixel">ONE NIGHT ONLY</span>
-      <h1 class="pixel intro-title" id="intro-title">MIDNIGHT<br />MONA TOUR</h1>
+      <h1 class="pixel intro-title kinetic-title" id="intro-title">${kineticText('MIDNIGHT')}<br />${kineticText('MONA TOUR')}</h1>
       <p class="intro-artist">${esc(EVENT.artist)}</p>
       <p class="intro-meta pixel">${esc(EVENT.date)} · ${esc(EVENT.venue)}</p>
       <button class="btn intro-enter" data-action="open-curtain">ENTER THE THEATER</button>
@@ -131,7 +143,7 @@ function mount() {
     </div>
 
     <button class="btn sound-toggle" data-action="toggle-sound" aria-pressed="false">
-      <span aria-hidden="true">♪</span> SOUND OFF
+      ${iconSVG('sound-off')} SOUND OFF
     </button>
     <div class="intro-floor" aria-hidden="true"></div>
     <p class="intro-status" id="intro-status" aria-live="polite"></p>
@@ -143,12 +155,20 @@ function mount() {
         <span class="brand-chip" aria-hidden="true"></span>
         <span class="pixel">${esc(EVENT.artist.toUpperCase())}</span>
       </div>
+      <button
+        class="btn theme-toggle"
+        data-action="toggle-theme"
+        aria-pressed="${state.arcadeMode}"
+        title="Toggle arcade CRT dark mode"
+      >
+        <span aria-hidden="true">▣</span> ${state.arcadeMode ? 'ARCADE MODE: ON' : 'ARCADE MODE'}
+      </button>
     </header>
 
     <section class="hero">
       <div class="hero-row">
         <div class="hero-copy">
-          <span class="pill"><span class="dot">●</span> ON SALE NOW</span>
+          <span class="pill">${iconSVG('star')}<span class="dot">●</span> ON SALE NOW</span>
           <h1 class="pixel hero-title">MIDNIGHT<br />MONA TOUR</h1>
           <p class="hero-meta">${esc(`${EVENT.date} · ${EVENT.doors} · ${EVENT.venue}`)}</p>
         </div>
@@ -209,7 +229,7 @@ function buildVenue() {
     const block = document.createElement('div');
     block.className = 'tier';
     block.innerHTML = `
-      <div class="tier-label pixel">
+      <div class="tier-label tier-badge tier-badge-${tier.id} pixel">
         <i class="swatch" style="background:${tier.color}"></i>
         <span>${esc(tier.name.toUpperCase())}</span>
         <span style="color:${tier.color}">${money(tier.price).replace('.00', '')}</span>
@@ -278,7 +298,7 @@ function renderCart() {
 
   cart.innerHTML = `
     <section class="cart" aria-label="Your tickets">
-      <div class="cart-head"><span class="pixel cart-title">YOUR TICKETS</span></div>
+      <div class="cart-head"><span class="pixel cart-title">${iconSVG('ticket')} YOUR TICKETS</span></div>
       <div class="cart-items">
         ${empty ? '<p class="cart-empty">Tap a seat on the map. Mona is watching.</p>' : ''}
         ${picked
@@ -287,7 +307,7 @@ function renderCart() {
           <div class="cart-item">
             <span>${esc(seatName(s))}</span>
             <span class="cart-price">${money(s.tier.price)}
-              <button class="btn btn-x" data-action="remove" data-id="${s.id}" aria-label="Remove ${esc(seatName(s))}" ${busy ? 'disabled' : ''}>×</button>
+              <button class="btn btn-x" data-action="remove" data-id="${s.id}" aria-label="Remove ${esc(seatName(s))}" ${busy ? 'disabled' : ''}>${iconSVG('close')}</button>
             </span>
           </div>`,
           )
@@ -295,9 +315,24 @@ function renderCart() {
       </div>
       <div class="perf" aria-hidden="true"></div>
       <div class="cart-totals">
-        <div><span>Subtotal</span><span>${money(subtotal)}</span></div>
-        <div><span>Service fee (${Math.round(SERVICE_FEE_RATE * 100)}%)</span><span>${money(fee)}</span></div>
-        <div class="pixel cart-total"><span>TOTAL</span><span>${money(total)}</span></div>
+        <div class="bento-totals">
+          <div class="bento-tile bento-tile-total pixel">
+            <span>TOTAL</span>
+            <strong>${money(total)}</strong>
+          </div>
+          <div class="bento-tile bento-tile-sub">
+            <span>Subtotal</span>
+            <strong>${money(subtotal)}</strong>
+          </div>
+          <div class="bento-tile bento-tile-fee">
+            <span>Fee (${Math.round(SERVICE_FEE_RATE * 100)}%)</span>
+            <strong>${money(fee)}</strong>
+          </div>
+          <div class="bento-tile bento-tile-seats">
+            <span>Seats</span>
+            <strong>${picked.length}</strong>
+          </div>
+        </div>
         <p class="payment-note">Simulated payment — no real charge.</p>
         <button class="btn btn-pay" data-action="pay" ${empty || busy ? 'disabled' : ''}>
           ${busy ? 'PROCESSING PAYMENT…' : empty ? 'PICK A SEAT' : `PAY ${money(total)}`}
@@ -461,11 +496,27 @@ function toggleSound() {
   const button = document.querySelector<HTMLButtonElement>('.sound-toggle');
   if (!button) return;
   button.setAttribute('aria-pressed', String(state.soundEnabled));
-  button.innerHTML = `<span aria-hidden="true">${state.soundEnabled ? '♫' : '♪'}</span> SOUND ${state.soundEnabled ? 'ON' : 'OFF'}`;
+  button.innerHTML = `${iconSVG(state.soundEnabled ? 'sound-on' : 'sound-off')} SOUND ${state.soundEnabled ? 'ON' : 'OFF'}`;
   if (state.soundEnabled) {
     playTone(262, 0.12);
     playTone(392, 0.18, 0.1);
   }
+}
+
+/** Arcade/CRT dark-mode toggle: swaps a neon-accented theme variant and
+ * remembers the choice in localStorage across visits. */
+function applyTheme(arcade: boolean) {
+  document.documentElement.dataset.theme = arcade ? 'arcade' : 'default';
+}
+
+function toggleTheme() {
+  state.arcadeMode = !state.arcadeMode;
+  localStorage.setItem(THEME_STORAGE_KEY, state.arcadeMode ? 'arcade' : 'default');
+  applyTheme(state.arcadeMode);
+  const button = document.querySelector<HTMLButtonElement>('.theme-toggle');
+  if (!button) return;
+  button.setAttribute('aria-pressed', String(state.arcadeMode));
+  button.innerHTML = `<span aria-hidden="true">▣</span> ${state.arcadeMode ? 'ARCADE MODE: ON' : 'ARCADE MODE'}`;
 }
 
 function enterTour() {
@@ -534,6 +585,9 @@ document.addEventListener('click', (e) => {
     case 'toggle-sound':
       toggleSound();
       break;
+    case 'toggle-theme':
+      toggleTheme();
+      break;
     case 'enter-tour':
       enterTour();
       break;
@@ -559,5 +613,6 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+applyTheme(state.arcadeMode);
 mount();
 render();
