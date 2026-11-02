@@ -159,9 +159,9 @@ function mount() {
         class="btn theme-toggle"
         data-action="toggle-theme"
         aria-pressed="${state.arcadeMode}"
-        title="Toggle arcade CRT dark mode"
+        title="Toggle dark mode"
       >
-        <span aria-hidden="true">▣</span> ${state.arcadeMode ? 'ARCADE MODE: ON' : 'ARCADE MODE'}
+        <span aria-hidden="true">◐</span> ${state.arcadeMode ? 'DARK MODE: ON' : 'DARK MODE'}
       </button>
     </header>
 
@@ -516,7 +516,7 @@ function toggleTheme() {
   const button = document.querySelector<HTMLButtonElement>('.theme-toggle');
   if (!button) return;
   button.setAttribute('aria-pressed', String(state.arcadeMode));
-  button.innerHTML = `<span aria-hidden="true">▣</span> ${state.arcadeMode ? 'ARCADE MODE: ON' : 'ARCADE MODE'}`;
+  button.innerHTML = `<span aria-hidden="true">◐</span> ${state.arcadeMode ? 'DARK MODE: ON' : 'DARK MODE'}`;
 }
 
 function enterTour() {
